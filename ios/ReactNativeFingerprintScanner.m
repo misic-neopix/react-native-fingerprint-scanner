@@ -50,9 +50,15 @@ RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
   [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
   if (error) {
     callback(@[error]);
+  } else {
+    NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
+    if (domainState) {
+      callback(@[[NSNull null], domainState]);
+    } else {
+      callback(@[[[NSError alloc] init]]);
+    }
   }
-  NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
-  callback(@[[NSNull null], domainState]);
+  
 }
 
 RCT_EXPORT_METHOD(validate: (NSString*)oldState
@@ -65,8 +71,8 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
     callback(@[error, @(false)]);
   }
   NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
-  if (domainState == oldState) {
-    callback(@[[NSNull null], @(false)]);
+  if ([domainState isEqualToString:oldState]) {
+    callback(@[[NSNull null], @(true)]);
   } else {
     callback(@[[[NSError alloc] init]]);
   }
