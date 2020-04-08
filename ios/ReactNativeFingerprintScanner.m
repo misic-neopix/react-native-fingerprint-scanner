@@ -69,13 +69,13 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
   [context canEvaluatePolicy:context error:&error];
   if (error) {
     callback(@[error, @(false)]);
-    return
-  }
-  NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
-  if ([domainState isEqualToString:oldState]) {
-    callback(@[[NSNull null], @(true)]);
   } else {
-    callback(@[[[NSError alloc] init]]);
+    NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
+    if ([domainState isEqualToString:oldState]) {
+      callback(@[[NSNull null], @(true)]);
+    } else {
+      callback(@[[[NSError alloc] init]]);
+    }
   }
 }
 
