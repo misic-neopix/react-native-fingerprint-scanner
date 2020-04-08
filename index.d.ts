@@ -168,7 +168,7 @@ export interface FingerPrintProps {
      */
   validate: (
       oldDomain: String
-  ) => Promise<void>
+  ) => Promise<boolean>
 }
 
 declare const FingerprintScanner: FingerPrintProps;
