@@ -51,7 +51,7 @@ RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
   if (error) {
     callback(@[error]);
   } else {
-    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedDataWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
     NSLog([NSString stringWithFormat:@"context value: %@", domainState]);
     if (domainState) {
       callback(@[[NSNull null], domainState]);
@@ -71,8 +71,7 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
   if (error) {
     callback(@[error, @(false)]);
   } else {
-    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedDataWithOptions:NSDataBase64Encoding64CharacterLineLength];
-    if ([domainState isEqualToString:oldState]) {
+    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];    if ([domainState isEqualToString:oldState]) {
       callback(@[[NSNull null], @(true)]);
     } else {
       callback(@[[[NSError alloc] init]]);
