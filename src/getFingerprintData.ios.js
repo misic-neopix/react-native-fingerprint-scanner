@@ -8,7 +8,7 @@ export default () => {
         ReactNativeFingerprintScanner.getFingerprintData( error, data => {
             if (error || !data) {
                 return reject(createError(ERRORS.AuthenticationProcessFailed, ERRORS.AuthenticationProcessFailed))
-            } else if  {
+            } else {
                 return resolve(data)
             }
         });
