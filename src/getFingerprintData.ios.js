@@ -5,9 +5,9 @@ const { ReactNativeFingerprintScanner } = NativeModules;
 
 export default () => {
     return new Promise((resolve, reject) => {
-        ReactNativeFingerprintScanner.getFingerprintData( error, data => {
+        ReactNativeFingerprintScanner.getFingerprintData( (error, data) => {
             if (error || !data) {
-                return reject(createError(ERRORS.AuthenticationProcessFailed, ERRORS.AuthenticationProcessFailed))
+                return reject(createError('AuthenticationProcessFailed', 'AuthenticationProcessFailed'))
             } else {
                 return resolve(data)
             }
