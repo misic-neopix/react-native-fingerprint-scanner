@@ -48,10 +48,13 @@ RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
   LAContext *context = [[LAContext alloc] init];
   NSError *error;
   [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
+  NSLog([NSString stringWithFormat:@"context error: %@", error]);
   if (error) {
     callback(@[error]);
   } else {
+    NSLog([NSString stringWithFormat:@"context data: %@", context.evaluatedPolicyDomainState]);
     NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
+    NSLog([NSString stringWithFormat:@"context value: %@", domainState]);
     if (domainState) {
       callback(@[[NSNull null], domainState]);
     } else {
