@@ -43,6 +43,23 @@ RCT_EXPORT_METHOD(isSensorAvailable: (RCTResponseSenderBlock)callback)
     }
 }
 
+RCT_EXPORT_METHOD(validate: (NSString*)oldState
+                  callback: (RCTResponseSenderBlock)callback)
+{
+  LAContext *context = [[LAContext alloc] init];
+  NSError *error;
+  [context canEvaluatePolicy:context error:&error];
+  if (error) {
+    callback(@[false]);
+  }
+  NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
+  if (domainState == oldState) {
+    callback(@[true]);
+  } else {
+    callback(@[true]);
+  }
+}
+
 RCT_EXPORT_METHOD(authenticate: (NSString *)reason
                   fallback: (BOOL)fallbackEnabled
                   callback: (RCTResponseSenderBlock)callback)
