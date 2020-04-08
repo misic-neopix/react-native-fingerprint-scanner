@@ -162,6 +162,13 @@ export interface FingerPrintProps {
   ) => Promise<void>;
 
     /**
+     ### getFingerprintData(): (Android, iOS)
+     Retrieves the current fingerprint data for fingerprint change validation
+
+     */
+    getFingerprintData: () => Promise<string>
+
+    /**
      ### validate(): (Android, iOS)
      Checks if fingerprint data was changed since the last time it was used.
 
@@ -169,6 +176,8 @@ export interface FingerPrintProps {
   validate: (
       oldDomain: String
   ) => Promise<boolean>
+
+
 }
 
 declare const FingerprintScanner: FingerPrintProps;

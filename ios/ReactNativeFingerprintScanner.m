@@ -43,6 +43,18 @@ RCT_EXPORT_METHOD(isSensorAvailable: (RCTResponseSenderBlock)callback)
     }
 }
 
+RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
+{
+  LAContext *context = [[LAContext alloc] init];
+  NSError *error;
+  [context canEvaluatePolicy:context error:&error];
+  if (error) {
+    callback(@[error]);
+  }
+  NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
+  callback(@[[NSNull null], domainState])
+}
+
 RCT_EXPORT_METHOD(validate: (NSString*)oldState
                   callback: (RCTResponseSenderBlock)callback)
 {
