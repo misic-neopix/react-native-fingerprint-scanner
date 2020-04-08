@@ -79,7 +79,7 @@ export interface FingerPrintProps {
 
       -------------------
       Exemple
-      
+
       ```
       componentWillUnmount() {
         FingerprintScanner.release();
@@ -94,7 +94,7 @@ export interface FingerPrintProps {
         -  Returns a `Promise<Biometrics>`
         - `biometryType`: *String* - The type of biometric authentication supported by the device.
         - `error: FingerprintScannerError { name, message, biometric }` - The name and message of failure and the biometric type in use.
-        
+
         -------------
         Exemple
 
@@ -110,14 +110,14 @@ export interface FingerPrintProps {
   isSensorAvailable: () => Promise<Biometrics>;
 
   /**
-      ### authenticate({ description, fallbackEnabled }): (iOS) 
+      ### authenticate({ description, fallbackEnabled }): (iOS)
 
       - Returns a `Promise`
       - `description: String` - the string to explain the request for user authentication.
       - `fallbackEnabled: Boolean` - default to ***true***, whether to display fallback button (e.g. Enter Password).
 
       ----------------
-      - Example: 
+      - Example:
       ```
       FingerprintScanner
         .authenticate({ description: 'Scan your fingerprint on the device scanner to continue' })
@@ -160,6 +160,15 @@ export interface FingerPrintProps {
   authenticate: (
     platformProps: AuthenticateIOS | AuthenticateAndroid
   ) => Promise<void>;
+
+    /**
+     ### validate(): (Android, iOS)
+     Checks if fingerprint data was changed since the last time it was used.
+
+     */
+  validate: (
+      oldDomain: String
+  ) => Promise<void>
 }
 
 declare const FingerprintScanner: FingerPrintProps;
