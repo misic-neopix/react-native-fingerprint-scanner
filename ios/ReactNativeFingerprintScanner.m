@@ -43,20 +43,40 @@ RCT_EXPORT_METHOD(isSensorAvailable: (RCTResponseSenderBlock)callback)
     }
 }
 
+RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
+{
+  LAContext *context = [[LAContext alloc] init];
+  NSError *error;
+  [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
+  if (error) {
+    callback(@[error]);
+  } else {
+    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    NSLog([NSString stringWithFormat:@"context value: %@", domainState]);
+    if (domainState) {
+      callback(@[[NSNull null], domainState]);
+    } else {
+      callback(@[[[NSError alloc] init]]);
+    }
+  }
+  
+}
+
 RCT_EXPORT_METHOD(validate: (NSString*)oldState
                   callback: (RCTResponseSenderBlock)callback)
 {
   LAContext *context = [[LAContext alloc] init];
   NSError *error;
-  [context canEvaluatePolicy:context error:&error];
+  [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
   if (error) {
-    callback(@[false]);
-  }
-  NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
-  if (domainState == oldState) {
-    callback(@[true]);
+    callback(@[error, @(false)]);
   } else {
-    callback(@[true]);
+    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    if ([domainState isEqualToString:oldState]) {
+      callback(@[[NSNull null], @(false)]);
+    } else {
+      callback(@[[[NSError alloc] init]]);
+    }
   }
 }
 
