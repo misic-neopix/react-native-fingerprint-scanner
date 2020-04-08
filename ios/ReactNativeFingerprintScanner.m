@@ -67,7 +67,7 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
 {
   LAContext *context = [[LAContext alloc] init];
   NSError *error;
-  [context canEvaluatePolicy:context error:&error];
+  [context canEvaluatePolicy:LAPolicyDeviceOwnerAuthenticationWithBiometrics error:&error];
   if (error) {
     callback(@[error, @(false)]);
   } else {
