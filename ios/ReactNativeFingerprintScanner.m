@@ -71,8 +71,9 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
   if (error) {
     callback(@[error, @(false)]);
   } else {
-    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];    if ([domainState isEqualToString:oldState]) {
-      callback(@[[NSNull null], @(true)]);
+    NSString* domainState = [context.evaluatedPolicyDomainState base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+    if ([domainState isEqualToString:oldState]) {
+      callback(@[[NSNull null], @(false)]);
     } else {
       callback(@[[[NSError alloc] init]]);
     }
