@@ -52,7 +52,7 @@ RCT_EXPORT_METHOD(getFingerprintData: (RCTResponseSenderBlock)callback)
     callback(@[error]);
   }
   NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
-  callback(@[[NSNull null], domainState])
+  callback(@[[NSNull null], domainState]);
 }
 
 RCT_EXPORT_METHOD(validate: (NSString*)oldState
@@ -62,13 +62,13 @@ RCT_EXPORT_METHOD(validate: (NSString*)oldState
   NSError *error;
   [context canEvaluatePolicy:context error:&error];
   if (error) {
-    callback(@[error, false]);
+    callback(@[error, @(false)]);
   }
   NSString* domainState = [[NSString alloc] initWithData:context.evaluatedPolicyDomainState encoding:NSUTF8StringEncoding];
   if (domainState == oldState) {
-    callback([NSNull null], @(false));
+    callback(@[[NSNull null], @(false)]);
   } else {
-    callback([[NSError alloc] init]);
+    callback(@[[[NSError alloc] init]]);
   }
 }
 
