@@ -7,9 +7,9 @@ export default ({ oldState }) => {
     return new Promise((resolve, reject) => {
         ReactNativeFingerprintScanner.validate(oldState, (error, success) => {
             if (success) {
-                return reject(createError('AuthenticationNotMatch', 'AuthenticationNotMatch'))
-            } else {
                 return resolve(true)
+            } else {
+                return reject(createError('AuthenticationNotMatch', 'AuthenticationNotMatch'))
             }
         });
     });
