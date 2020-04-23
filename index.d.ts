@@ -2,7 +2,7 @@ export type AuthenticateIOS = {
   description: string;
   fallbackEnabled: boolean;
 };
-export type AuthenticateAndroid = { onAttempt: (error: FingerprintScannerError) => void };
+export type AuthenticateAndroid = {data: string, saving: boolean, onAttempt: (error: FingerprintScannerError) => void };
 
 export type Biometrics = 'Touch ID' | 'Face ID' | 'Biometrics';
 
@@ -159,7 +159,7 @@ export interface FingerPrintProps {
      */
   authenticate: (
     platformProps: AuthenticateIOS | AuthenticateAndroid
-  ) => Promise<void>;
+  ) => Promise<string>;
 
     /**
      ### getFingerprintData(): (Android, iOS)

@@ -4,6 +4,12 @@ const { ReactNativeFingerprintScanner } = NativeModules;
 
 export default ({ oldState }) => {
     return new Promise((resolve) => {
-        resolve(true)
+        ReactNativeFingerprintScanner.validate(oldState, (error, success) => {
+            if (success) {
+                return resolve(true)
+            } else {
+                return reject(createError('AuthenticationNotMatch', 'AuthenticationNotMatch'))
+            }
+        });
     });
 }
