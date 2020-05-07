@@ -1,165 +1,165 @@
 export type AuthenticateIOS = {
-  description: string;
-  fallbackEnabled: boolean;
+    description: string;
+    fallbackEnabled: boolean;
 };
-export type AuthenticateAndroid = {data: string, saving: boolean, onAttempt: (error: FingerprintScannerError) => void };
+export type AuthenticateAndroid = {description: string, data: string, saving: boolean, onAttempt: (error: FingerprintScannerError) => void };
 
 export type Biometrics = 'Touch ID' | 'Face ID' | 'Biometrics';
 
 export type Errors =
-  | { name: 'AuthenticationNotMatch'; message: 'No match' }
-  | {
-      name: 'AuthenticationFailed';
-      message: 'Authentication was not successful because the user failed to provide valid credentials';
-    }
-  | {
-      name: 'AuthenticationTimeout';
-      message: 'Authentication was not successful because the operation timed out.';
-    }
-  | {
-      name: 'AuthenticationProcessFailed';
-      message: 'Sensor was unable to process the image. Please try again.';
-    }
-  | {
-      name: 'UserCancel';
-      message: 'Authentication was canceled by the user - e.g. the user tapped Cancel in the dialog';
-    }
-  | {
-      name: 'UserFallback';
-      message: 'Authentication was canceled because the user tapped the fallback button (Enter Password)';
-    }
-  | {
-      name: 'SystemCancel';
-      message: 'Authentication was canceled by system - e.g. if another application came to foreground while the authentication dialog was up';
-    }
-  | {
-      name: 'PasscodeNotSet';
-      message: 'Authentication could not start because the passcode is not set on the device';
-    }
-  | {
-      name: 'FingerprintScannerNotAvailable';
-      message: '	Authentication could not start because Fingerprint Scanner is not available on the device';
-    }
-  | {
-      name: 'FingerprintScannerNotEnrolled';
-      message: '	Authentication could not start because Fingerprint Scanner has no enrolled fingers';
-    }
-  | {
-      name: 'FingerprintScannerUnknownError';
-      message: 'Could not authenticate for an unknown reason';
-    }
-  | {
-      name: 'FingerprintScannerNotSupported';
-      message: 'Device does not support Fingerprint Scanner';
-    }
-  | {
-      name: 'DeviceLocked';
-      message: 'Authentication was not successful, the device currently in a lockout of 30 seconds';
-    }
-  | {
-      name: 'DeviceLockedPermanent';
-      message: 'Authentication was not successful, device must be unlocked via password.';
-    }
-  | {
-      name: 'DeviceOutOfMemory';
-      message: 'Authentication could not proceed because there is not enough free memory on the device.';
-    }
-  | {
-      name: 'HardwareError';
-      message: 'A hardware error occurred.';
-    };
+    | { name: 'AuthenticationNotMatch'; message: 'No match' }
+    | {
+    name: 'AuthenticationFailed';
+    message: 'Authentication was not successful because the user failed to provide valid credentials';
+}
+    | {
+    name: 'AuthenticationTimeout';
+    message: 'Authentication was not successful because the operation timed out.';
+}
+    | {
+    name: 'AuthenticationProcessFailed';
+    message: 'Sensor was unable to process the image. Please try again.';
+}
+    | {
+    name: 'UserCancel';
+    message: 'Authentication was canceled by the user - e.g. the user tapped Cancel in the dialog';
+}
+    | {
+    name: 'UserFallback';
+    message: 'Authentication was canceled because the user tapped the fallback button (Enter Password)';
+}
+    | {
+    name: 'SystemCancel';
+    message: 'Authentication was canceled by system - e.g. if another application came to foreground while the authentication dialog was up';
+}
+    | {
+    name: 'PasscodeNotSet';
+    message: 'Authentication could not start because the passcode is not set on the device';
+}
+    | {
+    name: 'FingerprintScannerNotAvailable';
+    message: '	Authentication could not start because Fingerprint Scanner is not available on the device';
+}
+    | {
+    name: 'FingerprintScannerNotEnrolled';
+    message: '	Authentication could not start because Fingerprint Scanner has no enrolled fingers';
+}
+    | {
+    name: 'FingerprintScannerUnknownError';
+    message: 'Could not authenticate for an unknown reason';
+}
+    | {
+    name: 'FingerprintScannerNotSupported';
+    message: 'Device does not support Fingerprint Scanner';
+}
+    | {
+    name: 'DeviceLocked';
+    message: 'Authentication was not successful, the device currently in a lockout of 30 seconds';
+}
+    | {
+    name: 'DeviceLockedPermanent';
+    message: 'Authentication was not successful, device must be unlocked via password.';
+}
+    | {
+    name: 'DeviceOutOfMemory';
+    message: 'Authentication could not proceed because there is not enough free memory on the device.';
+}
+    | {
+    name: 'HardwareError';
+    message: 'A hardware error occurred.';
+};
 
 export type FingerprintScannerError = { biometric: Biometrics } & Errors;
 
 export interface FingerPrintProps {
-  /**
-      ### release(): (Android)
-      Stops fingerprint scanner listener, releases cache of internal state in native code.
-      - Returns a `void`
+    /**
+     ### release(): (Android)
+     Stops fingerprint scanner listener, releases cache of internal state in native code.
+     - Returns a `void`
 
-      -------------------
-      Exemple
+     -------------------
+     Exemple
 
-      ```
-      componentWillUnmount() {
+     ```
+     componentWillUnmount() {
         FingerprintScanner.release();
       }
-      ```
-      */
-  release: () => void;
+     ```
+     */
+    release: () => void;
 
-  /**
-        ### isSensorAvailable(): (Android, iOS)
-        Checks if Fingerprint Scanner is able to be used by now.
-        -  Returns a `Promise<Biometrics>`
-        - `biometryType`: *String* - The type of biometric authentication supported by the device.
-        - `error: FingerprintScannerError { name, message, biometric }` - The name and message of failure and the biometric type in use.
+    /**
+     ### isSensorAvailable(): (Android, iOS)
+     Checks if Fingerprint Scanner is able to be used by now.
+     -  Returns a `Promise<Biometrics>`
+     - `biometryType`: *String* - The type of biometric authentication supported by the device.
+     - `error: FingerprintScannerError { name, message, biometric }` - The name and message of failure and the biometric type in use.
 
-        -------------
-        Exemple
+     -------------
+     Exemple
 
-        ```
-          FingerprintScanner
-            .isSensorAvailable()
-            .then(biometryType => this.setState({ biometryType }))
-            .catch(error => this.setState({ errorMessage: error.message }));
-        ```
+     ```
+     FingerprintScanner
+     .isSensorAvailable()
+     .then(biometryType => this.setState({ biometryType }))
+     .catch(error => this.setState({ errorMessage: error.message }));
+     ```
 
-        ------------
-      */
-  isSensorAvailable: () => Promise<Biometrics>;
+     ------------
+     */
+    isSensorAvailable: () => Promise<Biometrics>;
 
-  /**
-      ### authenticate({ description, fallbackEnabled }): (iOS)
+    /**
+     ### authenticate({ description, fallbackEnabled }): (iOS)
 
-      - Returns a `Promise`
-      - `description: String` - the string to explain the request for user authentication.
-      - `fallbackEnabled: Boolean` - default to ***true***, whether to display fallback button (e.g. Enter Password).
+     - Returns a `Promise`
+     - `description: String` - the string to explain the request for user authentication.
+     - `fallbackEnabled: Boolean` - default to ***true***, whether to display fallback button (e.g. Enter Password).
 
-      ----------------
-      - Example:
-      ```
-      FingerprintScanner
-        .authenticate({ description: 'Scan your fingerprint on the device scanner to continue' })
-        .then(() => {
+     ----------------
+     - Example:
+     ```
+     FingerprintScanner
+     .authenticate({ description: 'Scan your fingerprint on the device scanner to continue' })
+     .then(() => {
           this.props.handlePopupDismissed();
           AlertIOS.alert('Authenticated successfully');
         })
-        .catch((error) => {
+     .catch((error) => {
           this.props.handlePopupDismissed();
           AlertIOS.alert(error.message);
         });
-      ```
-      -----------------
+     ```
+     -----------------
 
-      ### authenticate({ description: 'Log in with Biometrics', onAttempt: () => (null) }): (Android)
+     ### authenticate({ description: 'Log in with Biometrics', onAttempt: () => (null) }): (Android)
 
-      - Returns a `Promise`
-      - `description: String` - the title text to appear on the native Android prompt
-      - `onAttempt: Function` - a callback function when users are trying to scan their fingerprint but failed.
+     - Returns a `Promise`
+     - `description: String` - the title text to appear on the native Android prompt
+     - `onAttempt: Function` - a callback function when users are trying to scan their fingerprint but failed.
 
-      -----------------
-      - Example:
-      ```
-      FingerprintScanner
-        .authenticate({
+     -----------------
+     - Example:
+     ```
+     FingerprintScanner
+     .authenticate({
           description: 'Log in with Biometrics',
           onAttempt: this.handleAuthenticationAttempted,
         })
-        .then(() => {
+     .then(() => {
           this.props.handlePopupDismissed();
           Alert.alert('Fingerprint Authentication', 'Authenticated successfully');
         })
-        .catch((error) => {
+     .catch((error) => {
           this.setState({ errorMessage: error.message });
           this.description.shake();
         });
-      ```
-      -----------------
+     ```
+     -----------------
      */
-  authenticate: (
-    platformProps: AuthenticateIOS | AuthenticateAndroid
-  ) => Promise<string>;
+    authenticate: (
+        platformProps: AuthenticateIOS | AuthenticateAndroid
+    ) => Promise<string>;
 
     /**
      ### getFingerprintData(): (Android, iOS)
@@ -173,13 +173,22 @@ export interface FingerPrintProps {
      Checks if fingerprint data was changed since the last time it was used.
 
      */
-  validate: (
-      oldDomain: String
-  ) => Promise<boolean>
+    validate: (
+        oldDomain: String
+    ) => Promise<boolean>
 
+    saveValue: ({
+                    code: string,
+                    value: string
+                }
+    ) => Promise<boolean>
 
+    getValue: ({
+                   code: string
+               }
+    ) => Promise<string>
 }
 
-declare const FingerprintScanner: FingerPrintProps;
+declare const FingerprintScanner: FingerPrintProps
 
-export default FingerprintScanner;
+export default FingerprintScanner

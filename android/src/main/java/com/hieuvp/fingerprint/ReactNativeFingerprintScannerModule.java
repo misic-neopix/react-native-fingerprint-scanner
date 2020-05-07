@@ -7,7 +7,6 @@ import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -28,9 +27,11 @@ import com.wei.android.lib.fingerprintidentify.FingerprintIdentify;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.ExceptionListener;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.IdentifyListener;
 
+import java.nio.charset.Charset;
 import java.security.Key;
 import java.security.KeyStore;
 import java.security.spec.InvalidParameterSpecException;
+import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -38,7 +39,7 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.GCMParameterSpec;
 
 // for Samsung/MeiZu compat, Android v16-23
 
@@ -51,7 +52,9 @@ public class ReactNativeFingerprintScannerModule
     public static final String TYPE_FINGERPRINT_LEGACY = "Fingerprint";
     private static final String MASTER_KEY_ALIAS = "MASTER_KEY";
     private static final int KEY_SIZE = 256;
-    private static final String DATA_KEY = "DATA_KEY";
+    private static final String DATA_KEY = "FSA#$@#$fs";
+    private static final String CODE_KEY = "#@$#@FF324";
+    public static final String BIOMETRICS_SHARED_PREFS = "biometrics_shared_prefs";
 
     private final ReactApplicationContext mReactContext;
     private BiometricPrompt biometricPrompt;
@@ -108,6 +111,7 @@ public class ReactNativeFingerprintScannerModule
             this.promise.reject(biometricPromptErrName(errorCode), TYPE_BIOMETRICS);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onAuthenticationSucceeded(@NonNull BiometricPrompt.AuthenticationResult result) {
             BiometricPrompt.CryptoObject cryptoObject = result.getCryptoObject();
@@ -115,18 +119,18 @@ public class ReactNativeFingerprintScannerModule
                 try {
                     String code;
                     if (isEncrypt) {
-                        byte[] encoded = new String(Base64.encode(data.getBytes(), Base64.NO_WRAP)).getBytes();
+                        byte[] encoded = Base64.encode(data.getBytes(), Base64.NO_WRAP);
                         Cipher cipher = cryptoObject.getCipher();
-                        code = new String(cipher.doFinal(encoded));
+                        code = bytesToHex(cipher.doFinal(encoded));
+                        this.promise.resolve(code);
                     } else {
-                        byte[] bytes = cryptoObject.getCipher().doFinal(data.getBytes());
-                        code = new String(Base64.decode(bytes, Base64.NO_WRAP));
+                        this.promise.resolve(getSavedValue());
                     }
-                    Log.i("mile", "mile + " + code);
-                    this.promise.resolve(code);
                 } catch (BadPaddingException e) {
                     e.printStackTrace();
                 } catch (IllegalBlockSizeException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -171,7 +175,6 @@ public class ReactNativeFingerprintScannerModule
                                 .setNegativeButtonText("Cancel")
                                 .setTitle(description)
                                 .build();
-
                         try {
                             Cipher cipher = getCipher(saving);
                             BiometricPrompt.CryptoObject crypto = new BiometricPrompt.CryptoObject(cipher);
@@ -210,19 +213,19 @@ public class ReactNativeFingerprintScannerModule
         Key key = ks.getKey(MASTER_KEY_ALIAS, null);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         SharedPreferences sharedPrefs = getReactApplicationContext()
-                .getSharedPreferences("biometrics_shared_prefs", Context.MODE_PRIVATE);
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
         if (isEncrypt) {
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            IvParameterSpec ivParams = cipher.getParameters().getParameterSpec(IvParameterSpec.class);
-            String iv = new String(Base64.encode(ivParams.getIV(), Base64.NO_WRAP));
+            cipher.init(Cipher.ENCRYPT_MODE, key, cipher.getParameters());
+            String iv = new String(Base64.encode(cipher.getIV(), Base64.NO_WRAP));
             sharedPrefs
                     .edit()
                     .putString("biometrics_iv", iv)
                     .apply();
         } else {
             byte[] bs = sharedPrefs.getString("biometrics_iv", "").getBytes();
-            IvParameterSpec params = new IvParameterSpec(Base64.decode(bs, Base64.NO_WRAP));
-            cipher.init(Cipher.DECRYPT_MODE, key, params);
+            byte[] iv = Base64.decode(bs, Base64.NO_WRAP);
+            GCMParameterSpec spec = new GCMParameterSpec(16 * Byte.SIZE, iv);
+            cipher.init(Cipher.DECRYPT_MODE, key, spec);
         }
         return cipher;
     }
@@ -405,5 +408,185 @@ public class ReactNativeFingerprintScannerModule
                 promise.reject("AuthenticationFailed", "DeviceLocked");
             }
         });
+    }
+
+    @ReactMethod
+    public void saveValue(String code, String value, final Promise promise) {
+        SharedPreferences sharedPrefs = getReactApplicationContext()
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
+        String codee = null;
+        boolean saveCode = code.length() > 0;
+        if (saveCode) {
+            try {
+                codee = encodeCode(code);
+            } catch (Exception e) {
+                promise.reject(e);
+            }
+        }
+        byte[] valueBytes = value.getBytes();
+        valueBytes = Base64.encode(valueBytes, Base64.NO_WRAP);
+        String valuee = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Cipher dataCipher = getUnauthenticatedCipher(true, DATA_KEY);
+                valuee = bytesToHex(dataCipher.doFinal(valueBytes));
+            } catch (Exception e) {
+                e.printStackTrace();
+                promise.reject(e);
+            }
+        } else {
+            valuee = bytesToHex(valueBytes);
+        }
+        SharedPreferences.Editor edit = sharedPrefs.edit();
+        if (saveCode) {
+            edit.putString("codee", codee);
+        }
+        edit.putString("valuee", valuee)
+                .apply();
+        promise.resolve(true);
+    }
+
+    private String encodeCode(String code) throws Exception {
+        byte[] codeBytes = code.getBytes();
+        codeBytes = Base64.encode(codeBytes, Base64.NO_WRAP);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Cipher codeCipher = getUnauthenticatedCipher(true, CODE_KEY);
+                codeBytes = codeCipher.doFinal(codeBytes);
+                String codee = bytesToHex(codeBytes);
+                return codee;
+            } catch (Exception e) {
+                throw e;
+            }
+        } else {
+            String codee = bytesToHex(codeBytes);
+            return codee;
+        }
+    }
+
+    private String decodeCode(String eCode) throws Exception {
+        byte[] codeBytes = hexStringToByteArray(eCode);
+        String code;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                Cipher codeCipher = getUnauthenticatedCipher(false, CODE_KEY);
+                codeBytes = codeCipher.doFinal(codeBytes);
+                codeBytes = Base64.decode(codeBytes, Base64.NO_WRAP);
+                code = new String(codeBytes);
+            } catch (Exception e) {
+                throw e;
+            }
+        } else {
+            codeBytes = Base64.encode(codeBytes, Base64.NO_WRAP);
+            code = new String(codeBytes);
+        }
+        return code;
+    }
+
+    @ReactMethod
+    public void getValue(String code, final Promise promise) {
+        SharedPreferences sharedPrefs = getReactApplicationContext()
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
+        String savedCode = null;
+        try {
+            savedCode = sharedPrefs.getString("codee", "");
+            savedCode = decodeCode(savedCode);
+        } catch (Exception e) {
+            promise.reject("WrongPasscode", "PASSCODE");
+            return;
+        }
+        try {
+            if (code.equals(savedCode)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    String value = getSavedValue();
+                    promise.resolve(value);
+                } else {
+                    byte[] valueBytes = hexStringToByteArray(sharedPrefs.getString("valuee", ""));
+                    valueBytes = Base64.decode(valueBytes, Base64.NO_WRAP);
+                    String value = bytesToHex(valueBytes);
+                    promise.resolve(value);
+                }
+            } else {
+                promise.reject("WrongPasscode", "PASSCODE");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            promise.reject(e);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private String getSavedValue() throws Exception {
+        SharedPreferences sharedPrefs = getReactApplicationContext()
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
+        Cipher dataDecoder = getUnauthenticatedCipher(false, DATA_KEY);
+        byte[] valueBytes = hexStringToByteArray(sharedPrefs.getString("valuee", ""));
+        valueBytes = dataDecoder.doFinal(valueBytes);
+        valueBytes = Base64.decode(valueBytes, Base64.NO_WRAP);
+        return new String(valueBytes);
+    }
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private Cipher getUnauthenticatedCipher(boolean isEncrypt, String keyName) throws Exception {
+        KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
+        ks.load(null);
+        if (!ks.containsAlias(keyName)) {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
+            KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(keyName,
+                    KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(KEY_SIZE);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                builder.setUnlockedDeviceRequired(true);            // these methods require API min 28
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                builder.setInvalidatedByBiometricEnrollment(true);  // this method requires API min 24
+            }
+            keyGenerator.init(builder.build());
+            keyGenerator.generateKey();
+        }
+        Key key = ks.getKey(keyName, null);
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SharedPreferences sharedPrefs = getReactApplicationContext()
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
+        if (isEncrypt) {
+            cipher.init(Cipher.ENCRYPT_MODE, key, cipher.getParameters());
+            String iv = new String(Base64.encode(cipher.getIV(), Base64.NO_WRAP));
+            sharedPrefs
+                    .edit()
+                    .putString(keyName + "_iv", iv)
+                    .apply();
+        } else {
+            byte[] bs = sharedPrefs.getString(keyName + "_iv", "").getBytes();
+            byte[] iv = Base64.decode(bs, Base64.NO_WRAP);
+            GCMParameterSpec spec = new GCMParameterSpec(16 * Byte.SIZE, iv);
+            cipher.init(Cipher.DECRYPT_MODE, key, spec);
+        }
+        return cipher;
+    }
+
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+
+    public static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    public static byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
     }
 }
