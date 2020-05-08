@@ -5,8 +5,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -32,6 +34,7 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -108,6 +111,7 @@ public class ReactNativeFingerprintScannerModule
         @Override
         public void onAuthenticationError(int errorCode, @NonNull CharSequence errString) {
             super.onAuthenticationError(errorCode, errString);
+            Log.i("Mile", "on auth error " + errString);
             this.promise.reject(biometricPromptErrName(errorCode), TYPE_BIOMETRICS);
         }
 
@@ -179,8 +183,11 @@ public class ReactNativeFingerprintScannerModule
                             Cipher cipher = getCipher(saving);
                             BiometricPrompt.CryptoObject crypto = new BiometricPrompt.CryptoObject(cipher);
                             bioPrompt.authenticate(promptInfo, crypto);
+                        } catch (KeyPermanentlyInvalidatedException e) {
+                            promise.reject("KeyPermanentlyInvalidated", TYPE_BIOMETRICS);
                         } catch (Exception e) {
                             e.printStackTrace();
+                            promise.reject("AuthenticationProcessFailed", TYPE_BIOMETRICS);
                         }
                     }
                 });
@@ -188,11 +195,21 @@ public class ReactNativeFingerprintScannerModule
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private Cipher getCipher(boolean isEncrypt) throws Exception {
+        SharedPreferences sharedPrefs = getReactApplicationContext()
+                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
+        String keyName;
+        if (isEncrypt) {
+            keyName = UUID.randomUUID().toString();
+            sharedPrefs.edit().putString(MASTER_KEY_ALIAS, keyName).apply();
+        } else {
+            keyName = sharedPrefs.getString(MASTER_KEY_ALIAS, "");
+        }
+
         KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
         ks.load(null);
-        if (!ks.containsAlias(MASTER_KEY_ALIAS)) {
+        if (!ks.containsAlias(keyName)) {
             KeyGenerator keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, "AndroidKeyStore");
-            KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(MASTER_KEY_ALIAS,
+            KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(keyName,
                     KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
@@ -203,17 +220,14 @@ public class ReactNativeFingerprintScannerModule
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
                 builder.setUnlockedDeviceRequired(true);            // these methods require API min 28
             }
-
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
                 builder.setInvalidatedByBiometricEnrollment(true);  // this method requires API min 24
             }
             keyGenerator.init(builder.build());
             keyGenerator.generateKey();
         }
-        Key key = ks.getKey(MASTER_KEY_ALIAS, null);
+        Key key = ks.getKey(keyName, null);
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        SharedPreferences sharedPrefs = getReactApplicationContext()
-                .getSharedPreferences(BIOMETRICS_SHARED_PREFS, Context.MODE_PRIVATE);
         if (isEncrypt) {
             cipher.init(Cipher.ENCRYPT_MODE, key, cipher.getParameters());
             String iv = new String(Base64.encode(cipher.getIV(), Base64.NO_WRAP));

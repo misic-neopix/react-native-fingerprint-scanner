@@ -11,9 +11,11 @@ const authCurrent = (description, data, saving, resolve, reject) => {
     ReactNativeFingerprintScanner.authenticate(description, data, saving)
         .then((data) => {
             resolve(data);
+            console.log('mile auth success in lib', error)
         })
         .catch((error) => {
             // translate errors
+            console.log('mile auth error in lib', error)
             reject(createError(error.code, error.message));
         });
 }

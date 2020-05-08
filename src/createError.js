@@ -9,9 +9,9 @@ const ERRORS = {
   AuthenticationFailed: 'Authentication was not successful because the user failed to provide valid credentials.',
   AuthenticationTimeout: 'Authentication was not successful because the operation timed out.',
   AuthenticationProcessFailed: 'Sensor was unable to process the image. Please try again.',
-  UserCancel: 'Authentication was canceled by the user - e.g. the user tapped Cancel in the dialog.',
+  UserCancel: 'Authentication was canceled by the user',
   UserFallback: 'Authentication was canceled because the user tapped the fallback button (Enter Password).',
-  SystemCancel: 'Authentication was canceled by system - e.g. if another application came to foreground while the authentication dialog was up.',
+  SystemCancel: 'Authentication was canceled by system',
   PasscodeNotSet: 'Authentication could not start because the passcode is not set on the device.',
   FingerprintScannerUnknownError: 'Could not authenticate for an unknown reason.',
   DeviceLocked: 'Authentication was not successful, the device currently in a lockout of 30 seconds.',
@@ -21,7 +21,8 @@ const ERRORS = {
 
   PasscodeSaveFailed: 'Saving passcode failed',
   WrongPasscode: 'Wrong passcode',
-  GetPasscodeError: 'Fetching error failed'
+  GetPasscodeError: 'Fetching error failed',
+  KeyPermanentlyInvalidated: 'Fingerprint data changed. Please re-enable fingerprint authentication in the Settings'
 };
 
 class FingerprintScannerError extends Error {
