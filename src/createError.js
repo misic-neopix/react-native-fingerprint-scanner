@@ -10,7 +10,7 @@ const ERRORS = {
   AuthenticationTimeout: 'Authentication was not successful because the operation timed out.',
   AuthenticationProcessFailed: 'Sensor was unable to process the image. Please try again.',
   UserCancel: 'Authentication was canceled by the user',
-  UserFallback: 'Authentication was canceled because the user tapped the fallback button (Enter Password).',
+  UserFallback: 'Authentication was canceled by user. Please enter Passcode.',
   SystemCancel: 'Authentication was canceled by system',
   PasscodeNotSet: 'Authentication could not start because the passcode is not set on the device.',
   FingerprintScannerUnknownError: 'Could not authenticate for an unknown reason.',
