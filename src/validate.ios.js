@@ -3,7 +3,7 @@ import createError from "./createError";
 
 const { ReactNativeFingerprintScanner } = NativeModules;
 
-export default ({ oldState }) => {
+export default (oldState) => {
     return new Promise((resolve, reject) => {
         ReactNativeFingerprintScanner.validate(oldState, (error, success) => {
             if (success) {
